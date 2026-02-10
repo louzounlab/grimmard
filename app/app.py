@@ -76,8 +76,6 @@ def impute_form():
             a_race = request.form.get("A1", None)
             if a_race == "":
                 a_race = request.form.get("A2", None)
-            if a_race == "":
-                raise Exception("Invalid format: must fill either one of the A's")
 
         is_genetic = a_race == "01"
 

@@ -37,15 +37,13 @@ def reduce_muug_loci(file_in, file_out, loci, num_res):
     f_out.close()
 
 def reduce_haps_loci(file_in, file_out, loci, num_res):
-    print(loci)
     dict_res = {}
     with open(file_in) as six_file:
         for line in six_file:
-            id, gl, prob, rank = line.strip().split(',')
-
-            hap1, hap2 = gl.split('+')
+            id, hap1, hap2, prob, rank = line.strip().split(',')
             haps = []
             for hap in [hap1, hap2]:
+                hap = hap.split(';')[0]
                 hap = hap.split("~")
                 hap_tmp =[]
                 for locus in hap:
@@ -78,15 +76,10 @@ def reduce_haps_loci(file_in, file_out, loci, num_res):
 #                     type=str)
 
 def reduce_loci(loci,  imputation_out_muug_freqs, imputation_out_hap_freqs):
-
-    print(imputation_out_muug_freqs)
-    print(imputation_out_hap_freqs)
     num_res = 20
 
     reduce_muug_loci(imputation_out_muug_freqs, (".").join(imputation_out_muug_freqs.split('.')[:-1]) + "_reduced.txt", loci, num_res)
     path_mug = (".").join(imputation_out_muug_freqs.split('.')[:-1]) + "_reduced.txt"
     output_file =(".").join(imputation_out_hap_freqs.split('.')[:-1])+ "_reduced.txt"
-    print(output_file)
     reduce_haps_loci(imputation_out_hap_freqs, (".").join(imputation_out_hap_freqs.split('.')[:-1])+ "_reduced.txt" , loci, num_res)
-    print("1")
     return output_file, path_mug

@@ -43,7 +43,6 @@ for file in freqs_files:
             hap, _, prob = line.split(",")
             hap = "~".join(sorted(hap.split("~")))
             prob == 'Freq\n'
-            print(i)
             freqs[hap] = float(prob)
 
     pop = file.split('.')[0]

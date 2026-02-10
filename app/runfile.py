@@ -9,7 +9,16 @@ sys.path.insert(0, os.path.join(".."))
 from grim import grim
 # grim.graph_freqs(configuration_file)
 
-def run_impute(conf_file, graph, input_path, output_haplotype_path, output_genotype_path,  project_dir_graph="", project_dir_in_file=""):
+def run_impute(
+        conf_file,
+        graph,
+        input_path,
+        output_haplotype_path,
+        output_genotype_path,
+        project_dir_graph="",
+        project_dir_in_file="",
+        hap_pop_pair=False,
+):
     configuration_file = conf_file
 
     # Read configuration file and load properties
@@ -19,7 +28,7 @@ def run_impute(conf_file, graph, input_path, output_haplotype_path, output_genot
     graph_files_path = json_conf.get("graph_files_path")
     if graph_files_path[-1] != '/':
         graph_files_path += '/'
-    output_dir = json_conf.get("imuptation_out_path", "output")
+    output_dir = json_conf.get("imputation_out_path", "output")
     if output_dir[-1] != '/':
         output_dir += '/'
     config = {
@@ -81,4 +90,4 @@ def run_impute(conf_file, graph, input_path, output_haplotype_path, output_genot
     pathlib.Path(output_dir).mkdir(parents=False, exist_ok=True)
 
     # Write out the results from imputation
-    imputation.impute_file(config)
+    imputation.impute_file(config, em_mr=hap_pop_pair)

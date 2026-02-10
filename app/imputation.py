@@ -5,6 +5,8 @@ import pyard
 import json
 from runfile import run_impute
 from reduce_loci import reduce_loci
+from py_graph_imputation_mlo.run_grim import change_donor_file
+from py_graph_imputation_mlo.filter_by_rest import change_output_by_extra_gl
 
 # define the input and output directories as constants
 INPUT_DIR = "./input_dir"
@@ -54,7 +56,15 @@ cast = {
     "DRB4_1": "DRB4",
     "DRB4_2": "DRB4",
     "DRB5_1": "DRB5",
-    "DRB5_2": "DRB5"
+    "DRB5_2": "DRB5",
+    "DQA1_1": "DQA1",
+    "DQA1_2": "DQA1",
+    "DPA1_1": "DPA1",
+    "DPA1_2": "DPA1",
+    "DPB1_1": "DPB1",
+    "DPB1_2": "DPB1",
+    "DRBX_1": "DRBX",
+    "DRBX_2": "DRBX",
 }
 
 
@@ -103,10 +113,26 @@ def get_allele_type(allele: str):
         return "B"
     elif allele.startswith("C"):
         return "C"
-    elif allele.startswith("DRB"):
-        return "DRB"
     elif allele.startswith("DQB"):
         return "DQB"
+    elif allele.startswith("DQA"):
+        return "DQA"
+    elif allele.startswith("DPA"):
+        return "DPA"
+    elif allele.startswith("DPB"):
+        return "DPB"
+    elif allele.startswith("DRX"):
+        return "DRX"
+    elif allele.startswith("DRB1"):
+        return "DRB1"
+    elif allele.startswith("DRB3"):
+        return "DRB3"
+    elif allele.startswith("DRB4"):
+        return "DRB4"
+    elif allele.startswith("DRB5"):
+        return "DRB5"
+    elif allele.startswith("DRBX"):
+        return "DRBX"
     return None
 
 
@@ -123,11 +149,11 @@ def convert_allele_val(allele: str, val: str, is_genetic=True):
         tuple[str, bool]: A tuple containing the converted string and a boolean indicating whether the conversion was successful.
         """
     if not val or not allele:
-        return "", False
+        return ""
     if ":" in val:
-        return f"{allele}*{val}"
+        return val
     if is_genetic:
-        return f"{allele}*{val}:XX"
+        return f"{val}:XX"
 
     return f"{allele}{val}"  # serology
 
@@ -258,6 +284,9 @@ def apply_grim(alleles: dict, race, loci, is_genetic=True):
         Returns:
         tuple[List[Tuple[str, str]], List[str], List[Tuple[str, str]], str, str]: A tuple containing the genotypes, haplotypes, GL string, and ARD string.
         """
+    hap_pop_pair, dominant3 = True, True
+    with open(PATH_TO_CONFIG, 'r') as f:
+        config = json.load(f)
     glstring, ard_string = apply_ard(alleles, is_genetic)
     num = string_to_file(ard_string, race1=race, race2=race)
 
@@ -265,10 +294,35 @@ def apply_grim(alleles: dict, race, loci, is_genetic=True):
     haplotype_path = os.path.join(OUTPUT_DIR, TO_HAPLOTYPE_FILE(num))
     genotype_path = os.path.join(OUTPUT_DIR, TO_GENOTYPE_FILE(num))
 
+    gls, lines = change_donor_file(input_path)
     # Apply grim here
     run_impute(PATH_TO_CONFIG, grim_graph, input_path,
-               output_haplotype_path=haplotype_path, output_genotype_path=genotype_path)
-    os.remove(input_path)
+               output_haplotype_path=haplotype_path, output_genotype_path=genotype_path, hap_pop_pair=hap_pop_pair)
+
+
+    path_pmug = haplotype_path
+    path_umug = genotype_path
+    path_umug_pops = os.path.join(
+        config["imputation_out_path"], config["imputation_out_umug_pops_filename"]
+    )
+    path_pmug_pops = os.path.join(
+        config["imputation_out_path"], config["imputation_out_hap_pops_filename"]
+    )
+    path_miss = os.path.join(
+        config["imputation_out_path"], config["imputation_out_miss_filename"]
+    )
+
+    change_output_by_extra_gl(
+        config, gls, path_pmug, path_umug, path_umug_pops, path_pmug_pops, path_miss
+    )  # filter reasults in our origianl file, add miss to existing miss
+
+    # changing to original donor file
+    with open(input_path, "w") as file:
+        for line in lines:
+            file.write(line)
+    file.close()
+
+    os.remove(input_path) #?#
 
     output_file_hap, output_file_muug = reduce_loci(loci, genotype_path, haplotype_path)
     genotypes = read_genos(output_file_muug)

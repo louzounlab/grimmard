@@ -35,7 +35,7 @@ input[type=radio] {
 }
 
 body {
-    background-image: url("../static/dna-struktur-rev.jpg");
+    background-image: url("../static/dna-struktur-rev-no-helix.png");
     background-repeat: no-repeat;
     background-size: 100%
     /*background-color: #efefef;*/

@@ -5,8 +5,8 @@ import pyard
 import json
 from runfile import run_impute
 from reduce_loci import reduce_loci
-from py_graph_imputation_mlo.run_grim import change_donor_file
-from py_graph_imputation_mlo.filter_by_rest import change_output_by_extra_gl
+from grim.RunGrim import change_donor_file
+from grim.filter_by_rest import change_output_by_extra_gl
 
 # define the input and output directories as constants
 INPUT_DIR = "./input_dir"

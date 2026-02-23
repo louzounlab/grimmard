@@ -17,7 +17,7 @@
   GitHub: [GitHub Repository](https://github.com/nmdp-bioinformatics/grimm-ard)
 - `pip` install required libraries.
     ```
-    pip install -r requirements.txt
+    pip install -r app/requirements.txt
     ```
 - Necessary files and configurations as mentioned below.
 

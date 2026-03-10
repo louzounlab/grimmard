@@ -38,7 +38,7 @@ the web application.
 Run the python script:
 
 ```
-cd setup
+cd app
 python3 produce_example_graph_file.py
 ```
 
@@ -103,7 +103,6 @@ Reading file: AFA.freqs.gz
 Change to `app` directory and start the web app.
 
 ```
-cd ../app
 python3 app.py
 ```
 
@@ -134,7 +133,7 @@ config_file = 'app/conf/conf.json'
 produce_hpf(conf_file=config_file)
 ```
 
-This will produce a `setup/output/hpf.csv`. The output directory should look as:
+This will produce a `app/output/hpf.csv`. The output directory should look as:
 
 ```
 output
@@ -227,11 +226,11 @@ Make sure to place the necessary files in the correct directories:
 - **Graph-related files** should be inside the **`csv`** directory.
 - The **path for `csv`** should be:
   ```
-  setup/output_new/csv
+  app/output_new/csv
   ```
 - The **population counts file (`pop_counts_file.txt`)** should be located at:
   ```
-  setup/output_new/pop_counts_file.txt
+  app/output_new/pop_counts_file.txt
   ```
 - The **configuration file (`conf.json`)** should be placed at:
   ```

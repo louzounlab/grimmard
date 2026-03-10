@@ -83,7 +83,6 @@ def run_impute(
     config["full_loci"] = ''.join(sorted(all_loci_set))
     
     # Perform imputation
-    config["pops_count_file"] = "../setup/" + config["pops_count_file"]
     imputation = grim.impute_instance(config, graph)
 
     # Create output directory if it doesn't exist

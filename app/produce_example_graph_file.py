@@ -7,7 +7,7 @@ from generate_config_dict import generate_dict_config
 from grim import grim
 
 # Step 1: Create HPF File
-config_file = '../app/conf/conf.json'
+config_file = 'conf/conf.json'
 produce_hpf(conf_file=config_file)
 print("1. Produced: output_new/hpf.csv")
 
@@ -22,13 +22,13 @@ graph = grim.graph_instance(dict_config)
 
 # Pickle it out
 # Assuming 'graph' is your graph instance, save it as a pickle
-os.makedirs("../app/data", exist_ok=True)
-with open('../app/data/graph.pkl', 'wb') as pickle_file:
+os.makedirs("data", exist_ok=True)
+with open('data/graph.pkl', 'wb') as pickle_file:
     pickle.dump(graph, pickle_file)
-print("3. Produced Whole Graph: app/data/graph.pkl")
+print("3. Produced Whole Graph: data/graph.pkl")
 
 # Generate the freq dictionary file
-os.makedirs("../app/data/freqs_dicts", exist_ok=True)
+os.makedirs("data/freqs_dicts", exist_ok=True)
 
 freqs_files = os.listdir("data/freq_9loci/")
 all_freqs = {}
@@ -48,10 +48,10 @@ for file in freqs_files:
     pop = file.split('.')[0]
     all_freqs[pop] = freqs
 
-with open(f"../app/data/freqs_dicts/all_freqs.pickle", "wb") as f:
+with open(f"data/freqs_dicts/all_freqs.pickle", "wb") as f:
     pickle.dump(all_freqs, f)
-print("4. Produced Pickled Freqs: app/data/freqs_dicts/all_freqs.pickle")
+print("4. Produced Pickled Freqs: data/freqs_dicts/all_freqs.pickle")
 
 # Copy pop ratio file
-shutil.copy('output_new/pop_counts_file.txt', '../app/data/pop_ratio.txt')
-print("5. Produced app/data/pop_ratio.txt")
+shutil.copy('output_new/pop_counts_file.txt', 'data/pop_ratio.txt')
+print("5. Produced data/pop_ratio.txt")

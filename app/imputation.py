@@ -29,12 +29,16 @@ TO_INPUT_FILE = lambda num: f"input{num}.csv"
 TO_HAPLOTYPE_FILE = lambda num: f"haplotype{num}.csv"
 TO_GENOTYPE_FILE = lambda num: f"genotype{num}.csv"
 
-with open(f"./data/freqs_dicts/all_freqs.pickle", "rb") as f:
-    all_freqs = pickle.load(f)
+def get_all_freqs():
+    with open(f"./data/freqs_dicts/all_freqs.pickle", "rb") as f:
+        all_freqs = pickle.load(f)
+        return all_freqs
 
-# open the grim graph pickle file and load its contents into the grim_graph variable
-with open(PATH_TO_GRIM_GRAPH, "rb") as f:
-    grim_graph = pickle.load(f)
+def get_grim_graph():
+    # open the grim graph pickle file and load its contents into the grim_graph variable
+    with open(PATH_TO_GRIM_GRAPH, "rb") as f:
+        grim_graph = pickle.load(f)
+        return grim_graph
 
 # initialize the pyard object
 ard = pyard.init()
@@ -265,6 +269,7 @@ def apply_grim_file(file):
     haplotype_path = os.path.join(OUTPUT_DIR, TO_HAPLOTYPE_FILE(num))
     genotype_path = os.path.join(OUTPUT_DIR, TO_GENOTYPE_FILE(num))
 
+    grim_graph = get_grim_graph()
     run_impute(PATH_TO_CONFIG, grim_graph, input_path,
                output_haplotype_path=haplotype_path, output_genotype_path=genotype_path)
     os.remove(input_path)
@@ -295,6 +300,7 @@ def apply_grim(alleles: dict, race, loci, is_genetic=True):
     genotype_path = os.path.join(OUTPUT_DIR, TO_GENOTYPE_FILE(num))
 
     gls, lines = change_donor_file(input_path)
+    grim_graph = get_grim_graph()
     # Apply grim here
     run_impute(PATH_TO_CONFIG, grim_graph, input_path,
                output_haplotype_path=haplotype_path, output_genotype_path=genotype_path, hap_pop_pair=hap_pop_pair)
@@ -392,7 +398,6 @@ def read_haps(path, race_str):
            ({'A*01:01': {'Asian': '1.23e-02', 'African': '3.45e-03'}, 'B*08:01': {'Asian': '5.67e-04', 'African': '7.89e-05'}},
             [('1', 'A*01:01', 'B*08:01', '1.23e-02'), ('2', 'A*01:01', 'B*08:02', '2.34e-03')])
         """
-    print(grim_graph)
     hlas = set()
     hla_and_probs = {}
     hla_pairs = []
@@ -429,6 +434,8 @@ def read_haps(path, race_str):
             else:
                 freq = grim_graph.whole_graph.nodes[hla]["freq"][populations.index(race)]
                 hla_and_probs[hla][race] = f"{freq:0.3e}" """
+    all_freqs = get_all_freqs()
+    grim_graph = get_grim_graph()
     for hla in hlas:
         hla_and_probs[hla] = {}
         for race, _ in all_freqs.items():

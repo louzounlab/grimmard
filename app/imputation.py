@@ -29,16 +29,22 @@ TO_INPUT_FILE = lambda num: f"input{num}.csv"
 TO_HAPLOTYPE_FILE = lambda num: f"haplotype{num}.csv"
 TO_GENOTYPE_FILE = lambda num: f"genotype{num}.csv"
 
+all_freqs = None
 def get_all_freqs():
-    with open(f"./data/freqs_dicts/all_freqs.pickle", "rb") as f:
-        all_freqs = pickle.load(f)
-        return all_freqs
+    global all_freqs
+    if all_freqs is None:
+        with open(f"./data/freqs_dicts/all_freqs.pickle", "rb") as f:
+            all_freqs = pickle.load(f)
+    return all_freqs
 
+grim_graph = None
 def get_grim_graph():
-    # open the grim graph pickle file and load its contents into the grim_graph variable
-    with open(PATH_TO_GRIM_GRAPH, "rb") as f:
-        grim_graph = pickle.load(f)
-        return grim_graph
+    global grim_graph
+    if grim_graph is None:
+        # open the grim graph pickle file and load its contents into the grim_graph variable
+        with open(PATH_TO_GRIM_GRAPH, "rb") as f:
+            grim_graph = pickle.load(f)
+    return grim_graph
 
 # initialize the pyard object
 ard = pyard.init()

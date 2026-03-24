@@ -37,11 +37,8 @@ def paths_exist(paths, app_dir, conf_dir):
     return True
 
 graph_exists = False
-pop_exists = False
 def run_setup_if_needed():
     global graph_exists
-    global pop_exists
-
 
     app_dir = Path(__file__).resolve().parent
     conf_dir = app_dir / "conf"
@@ -59,13 +56,6 @@ def run_setup_if_needed():
                 check=True
             )
         graph_exists = True
-
-    if not pop_exists:
-        if not paths_exist(["output_new/pop_count_file.txt"], app_dir, conf_dir):
-            print("Generating new pop count file")
-            from graph_generation.generate_hpf import produce_hpf
-            produce_hpf(conf_file='conf/conf.json')
-        pop_exists = True
 
 
 def create_app() -> Flask:

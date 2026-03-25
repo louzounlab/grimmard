@@ -51,7 +51,3 @@ for file in freqs_files:
 with open(f"data/freqs_dicts/all_freqs.pickle", "wb") as f:
     pickle.dump(all_freqs, f)
 print("4. Produced Pickled Freqs: data/freqs_dicts/all_freqs.pickle")
-
-# Copy pop ratio file
-shutil.copy('output_new/pop_counts_file.txt', 'data/pop_ratio.txt')
-print("5. Produced data/pop_ratio.txt")

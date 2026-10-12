@@ -1,243 +1,177 @@
 # grimm-ard
 
+A web application for HLA imputation. It normalizes a typing with
+[py-ard](https://github.com/nmdp-bioinformatics/py-ard) and imputes genotypes and haplotypes with
+[py-graph-imputation](https://github.com/nmdp-bioinformatics/py-graph-imputation) (GRIMM).
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Example](#example)
-3. [Updating the Website](#updating-the-website)
-    - [Configuration File](#configuration-file)
-    - [Generating HPF File](#hpf-file)
-    - [Preparing the Incidence Graph](#preparing-the-incidence-graph)
-    - [Configuring the application](#configure-app)
+2. [Quick start](#quick-start)
+3. [Using the application](#using-the-application)
+4. [Using your own frequency data](#using-your-own-frequency-data)
+    - [Configuration file](#configuration-file)
+    - [Building the graph](#building-the-graph)
+    - [Using an existing graph](#using-an-existing-graph)
+5. [Project layout](#project-layout)
+
 ---
 
 ## Prerequisites<a name="prerequisites"></a>
 
-- Access to the **grimm-ard** code repository on
-  GitHub: [GitHub Repository](https://github.com/nmdp-bioinformatics/grimm-ard)
-- `pip` install required libraries.
-    ```
-    pip install -r app/requirements.txt
-    ```
-- Necessary files and configurations as mentioned below.
+- Python 3.10 or newer.
+- A C compiler (e.g. `build-essential` on Debian/Ubuntu, Xcode Command Line Tools on macOS).
+  `py-graph-imputation` may be built from source with Cython during installation.
+- Internet access on the first run: py-ard downloads the IMGT/HLA database and caches it locally.
+
+Clone the repository and install the dependencies, preferably in a virtual environment:
+
+```
+git clone https://github.com/louzounlab/grimmard.git
+cd grimmard
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r app/requirements.txt
+```
+
+`py-graph-imputation` 1.0.0 or newer is required.
 
 ---
-### Example<a name="example"></a>
 
-The following example shows a working application with minimal setup. See the next section for working with your own data set. 
+## Quick start<a name="quick-start"></a>
 
-#### Example of a minimal **grimm-ard** application working.
+The repository ships with 9-locus haplotype frequencies for two populations (`AFA`, `CAU`) in
+`app/data/freq_9loci/`. To run the application on this example data:
 
-There are sample freq. files and configuration files available in `example` directory. To use those example files for **grimm-ard**, follow:
+```
+cd app
+python3 app.py
+```
 
-##### Produce the needed graph and freq. files
+Then open http://127.0.0.1:5000/.
 
-The script will create the needed intermediary files in `output` directory and generate a graph pickle file needed for
-the web application.
+All paths are relative to `app/`, so **always start the application from the `app` directory**.
 
-Run the python script:
+On the first start, `app.py` checks for `data/graph.pkl`, `data/pop_ratio.txt` and `data/freqs_dicts/`.
+If any are missing it runs `produce_example_graph_file.py` to generate them, which takes a minute or so.
+You can also run that step yourself beforehand:
 
 ```
 cd app
 python3 produce_example_graph_file.py
 ```
 
-output as it produces the needed files:
+It prints the configuration it uses and finishes with:
 
 ```
-****************************************************************************************************
-Conversion to HPF file based on following configuration:
-	Population: ['AFA', 'CAU']
-	Frequency File Directory: example/data/freqs
-	Output File: output/hpf.csv
-****************************************************************************************************
-Reading Frequency File:	 example/data/freqs/AFA.freqs.gz
-Reading Frequency File:	 example/data/freqs/CAU.freqs.gz
-Writing hpf File:	 output/hpf.csv
-1. Produced: output/hpf.csv
-****************************************************************************************************
-Performing graph generation based on following configuration:
-	Population: ['AFA', 'CAU']
-	Freq File: output/hpf.csv
-	Freq Trim Threshold: 1e-05
-****************************************************************************************************
-2. Produced nodes and edges: output/csv
-****************************************************************************************************
-Performing imputation based on:
-	Population: ['AFA', 'CAU']
-	Priority: {'alpha': 0.4999999, 'eta': 0, 'beta': 1e-07, 'gamma': 1e-07, 'delta': 0.4999999}
-	UNK priority: SR
-	Epsilon: 0.001
-	Plan B: True
-	Number of Results: 10
-	Number of Population Results: 100
-	Nodes File: output/csv/nodes.csv
-	Top Links File: output/csv/edges.csv
-	Input File: data/subjects/donor.csv
-	Output UMUG Format: True
-	Output UMUG Freq Filename: output/don.umug
-	Output UMUG Pops Filename: output/don.umug.pops
-	Output Haplotype Format: True
-	Output HAP Freq Filename: output/don.pmug
-	Output HAP Pops Filename: output/don.pmug.pops
-	Output Miss Filename: output/don.miss
-	Output Problem Filename: output/don.problem
-	Factor Missing Data: 0.0001
-	Loci Map: {'A': 1, 'B': 2, 'C': 3, 'DQB1': 4, 'DRB1': 5}
-	Plan B Matrix: [[[1, 2, 3, 4, 5]], [[1, 2, 3], [4, 5]], [[1], [2, 3], [4, 5]], [[1, 2, 3], [4], [5]], [[1], [2, 3], [4], [5]], [[1], [2], [3], [4], [5]]]
-	Pops Count File: output/pop_counts_file.txt
-	Use Pops Count File: output/pop_counts_file.txt
-	Number of Options Threshold: 100000
-	Max Number of haplotypes in phase: 100
-	Save space mode: False
-****************************************************************************************************
-3. Produced Whole Graph: app/graph.pickle
-Reading file: CAU.freqs.gz
-Reading file: AFA.freqs.gz
-4. Produced Pickled Freqs: app/freqs_dicts/all_freqs.pickle
-5. Produced app/pop_ratio.txt
+1. Produced: output_new/hpf.csv
+2. Produced nodes and edges: output_new/csv
+3. Produced Whole Graph: data/graph.pkl
+4. Produced Pickled Freqs: data/freqs_dicts/all_freqs.pickle
 ```
 
-##### Start the application
+> **Note:** `app.py` runs Flask in debug mode on `0.0.0.0`. This is fine on your own machine, but do not
+> expose it on a network: the debugger allows anyone who reaches the port to execute code.
 
-Change to `app` directory and start the web app.
-
-```
-python3 app.py
-```
-
-##### Use Application
-
-Visit http://127.0.0.1:5000/ to test out the application locally.
+> **Note:** The example frequency data is small, so many typings return few or no results. Use your own
+> frequency data for meaningful imputation.
 
 ---
 
-## Updating the Website<a name="updating-the-website"></a>
+## Using the application<a name="using-the-application"></a>
 
-To update the Grim_ard website, you will need to follow these steps:
+There are two ways to submit typings:
 
-### Configuration File<a name="configuration-file"></a>
+- **Form:** Enter alleles per locus (or a GL string) and the population, and optionally choose which loci
+  to show in the results. The results page lists the most likely genotypes and haplotype pairs.
+- **File upload:** Upload a CSV file with one subject per line and no header:
 
-Ensure you have a JSON configuration file prepared. This file is crucial for configuring various aspects of the website.
+  ```
+  ID,GL_STRING,RACE1,RACE2
+  ```
 
-See example file: [Configuration File](example/conf/minimal-configuration.json)
+  For example:
 
-### HPF File<a name="hpf-file"></a>
+  ```
+  D1,A*01:01+A*02:01^B*08:01+B*07:02^DRB1*03:01+DRB1*15:01,CAU,CAU
+  ```
 
-Generate a HPF file from the freq. file based on configuration.
+  You get back a zip file with the genotype and haplotype results.
 
-```python
-from graph_generation.generate_hpf import produce_hpf
-
-config_file = 'app/conf/conf.json'
-produce_hpf(conf_file=config_file)
-```
-
-This will produce a `app/output/hpf.csv`. The output directory should look as:
-
-```
-output
-├── csv
-├── hpf.csv
-└── pop_counts_file.txt
-```
-
-The `output/pop_counts_file.txt` needs to be copied to `app/pop_ratio.txt`:
-
-### Create Nodes/Edges files
-
-From HPF file, create nodes/edges CSV files.
-
-```python
-from grim import grim
-
-config_file = 'example/conf/minimal-configuration.json'
-
-grim.graph_freqs(config_file)
-```
-
-You should see the nodes/edges CSV files.
-```
-|-- csv
-|   |-- edges.csv
-|   |-- info_node.csv
-|   |-- nodes.csv
-|   `-- top_links.csv
-
-```
-
-### Preparing the Incidence Graph<a name="preparing-the-incidence-graph"></a>
-
-Using nodes/edges CSV files, produce a graph
-
-```python
-from generate_config_dict import generate_dict_config
-from grim import grim
-
-config_file = 'example/conf/minimal-configuration.json'
-dict_config = generate_dict_config(config_file)
-
-graph = grim.graph_instance(dict_config)
-```
-
-Ensure you have the `graph.pickle` file containing your graph instance. This pickle file will be used during the website
-update process.
-
-Save the graph as a pickle file in the `data/` directory.
-
-```python
-import pickle
-
-with open('data/graph.pickle', 'wb') as pickle_file:
-    pickle.dump(graph, pickle_file)
-```
-
-The frequency files also need to be imported and pickled with haplotype->freq dictionary to create a pickle file
-in `app/freqs_dicts/all_freqs.pickle`.
-
-Adapt the [example Python script](#example-of-a-minimal-grimm-ard-application-working) to your dataset.
-
-### Configure application<a name="configure-app"></a>
-
-Create `WEBSITE_CONFIG_FILE` and `GRIM_GRAPH` environment variables to point to config and pickled graph object file
-relative to `app/` directory.
-
-Change `WEBSITE_CONFIG_FILE` to the path of your configuration file.
-
-```
-export WEBSITE_CONFIG_FILE=my-website-configuration.json
-```
-
-Change `GRIM_GRAPH` to the path of the frequency graph you created and saved e.g. 'my-graph.pickle'.
-
-```
-export GRIM_GRAPH=my-graph.pickle
-```
-
-Here’s the text you can add to your **README** file:
+Populations must match the `populations` in the configuration file (`AFA` and `CAU` for the example data).
 
 ---
 
-### **Note: Using an Existing Graph**
-If you **already have a graph**, you only need to run the Python script **`produce_example_graph_file.py`** starting from **Step 3** (**skip Step 1 and Step 2**).
+## Using your own frequency data<a name="using-your-own-frequency-data"></a>
 
-#### **Required File Locations**
-Make sure to place the necessary files in the correct directories:
-- **Graph-related files** should be inside the **`csv`** directory.
-- The **path for `csv`** should be:
-  ```
-  app/output_new/csv
-  ```
-- The **population counts file (`pop_counts_file.txt`)** should be located at:
-  ```
-  app/output_new/pop_counts_file.txt
-  ```
-- The **configuration file (`conf.json`)** should be placed at:
-  ```
-  app/conf/conf.json
-  ```
+### Configuration file<a name="configuration-file"></a>
 
-Ensure that all required files are correctly placed before running the script.
+The application reads its configuration from `app/conf/conf.json`. The parameters are described in
+[app/conf/README.md](app/conf/README.md). The ones you most likely need to change are:
+
+| Parameter | Description |
+| --- | --- |
+| `populations` | Population names. Each must have a frequency file `<POP>.freqs.gz` in `freq_data_dir`. |
+| `freq_data_dir` | Directory with the haplotype frequency files (default `data/freq_9loci`). |
+| `loci_map` | Maps each locus name to its index in the haplotype. |
+| `Plan_A_Matrix` | Combinations of locus indexes that imputation can start from. |
+| `Plan_B_Matrix` | Ways to split the full haplotype when no full-haplotype match is found. |
+| `freq_trim_threshold` | Haplotypes below this frequency are left out of the graph. |
+| `number_of_results` | Maximum number of genotypes/haplotype pairs returned per subject. |
+
+Frequency files are gzipped CSVs with a header line and one haplotype per line, with alleles joined
+by `~`:
+
+```
+Haplo,Count,Freq
+A*33:03~C*02:10~B*15:03~DRB4*01:01~DRB1*04:04~DQA1*03:01~DQB1*03:02~DPA1*01:03~DPB1*04:01,1.629346,0.001172078432
+```
+
+### Building the graph<a name="building-the-graph"></a>
+
+After placing your frequency files in `freq_data_dir` and updating `conf/conf.json`, delete any
+previously generated files and rebuild:
+
+```
+cd app
+rm -rf data/graph.pkl data/pop_ratio.txt data/freqs_dicts output_new
+python3 produce_example_graph_file.py
+```
+
+`produce_example_graph_file.py` runs these steps:
+
+1. Converts the frequency files into a haplotype-population-frequency file (`output_new/hpf.csv`) and
+   writes population ratios to `data/pop_ratio.txt`.
+2. Builds the node and edge CSV files in `output_new/csv/`.
+3. Builds the imputation graph and saves it to `data/graph.pkl`.
+4. Saves the haplotype frequencies per population to `data/freqs_dicts/all_freqs.pickle`.
+
+### Using an existing graph<a name="using-an-existing-graph"></a>
+
+If you already have the node and edge CSV files, you can skip steps 1 and 2. Place:
+
+- the CSV files (`nodes.csv`, `edges.csv`, `top_links.csv`, `info_node.csv`) in `app/output_new/csv/`,
+- the population ratio file in `app/data/pop_ratio.txt`,
+- the configuration in `app/conf/conf.json`,
+
+then comment out steps 1 and 2 in `produce_example_graph_file.py` and run it.
 
 ---
 
+## Project layout<a name="project-layout"></a>
+
+```
+app/
+├── app.py                         # Flask application
+├── imputation.py                  # py-ard + GRIMM imputation used by the web routes
+├── runfile.py                     # Builds the imputation config and runs GRIMM
+├── reduce_loci.py                 # Restricts results to the loci selected by the user
+├── produce_example_graph_file.py  # Generates the graph and frequency pickles
+├── conf/conf.json                 # Configuration
+├── data/freq_9loci/               # Example haplotype frequencies (AFA, CAU)
+├── templates/, static/            # Web pages and assets
+├── data/graph.pkl                 # Generated: imputation graph
+├── data/pop_ratio.txt             # Generated: population ratios
+├── data/freqs_dicts/              # Generated: pickled frequencies
+└── output_new/                    # Generated: intermediate files and imputation output
+```

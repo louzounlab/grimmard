@@ -5,7 +5,7 @@ import pyard
 import json
 from runfile import run_impute
 from reduce_loci import reduce_loci
-from grim.RunGrim import change_donor_file
+from grim.filter_top_3 import change_donor_file
 from grim.filter_by_rest import change_output_by_extra_gl
 
 # define the input and output directories as constants

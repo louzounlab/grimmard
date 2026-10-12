@@ -8,7 +8,7 @@ A web application for HLA imputation. It normalizes a typing with
 
 1. [Prerequisites](#prerequisites)
 2. [Quick start](#quick-start)
-3. [Using the application](#using-the-application)
+3. [Example](#example)
 4. [Using your own frequency data](#using-your-own-frequency-data)
     - [Configuration file](#configuration-file)
     - [Building the graph](#building-the-graph)
@@ -70,35 +70,65 @@ It prints the configuration it uses and finishes with:
 4. Produced Pickled Freqs: data/freqs_dicts/all_freqs.pickle
 ```
 
-> **Note:** `app.py` runs Flask in debug mode on `0.0.0.0`. This is fine on your own machine, but do not
-> expose it on a network: the debugger allows anyone who reaches the port to execute code.
-
 > **Note:** The example frequency data is small, so many typings return few or no results. Use your own
 > frequency data for meaningful imputation.
 
 ---
 
-## Using the application<a name="using-the-application"></a>
+## Example<a name="example"></a>
 
-There are two ways to submit typings:
+These examples use the bundled example data and were checked against it. Populations must match the
+`populations` in the configuration file (`AFA` and `CAU` for the example data).
 
-- **Form:** Enter alleles per locus (or a GL string) and the population, and optionally choose which loci
-  to show in the results. The results page lists the most likely genotypes and haplotype pairs.
-- **File upload:** Upload a CSV file with one subject per line and no header:
+### Imputing one typing with the form
+
+On the home page, enter this typing (as separate alleles, or as a GL string), select the `CAU`
+population and the loci `A`, `B`, `C`, `DRB1` and `DQB1`:
+
+```
+A*01:01+A*02:01^B*07:02+B*08:01^C*07:01+C*16:04^DQB1*02:01+DQB1*06:02^DRB1*03:01+DRB1*15:01
+```
+
+The results page shows the most likely genotype and haplotype pair, restricted to the selected loci:
+
+| Genotype | Genotype Frequency | Normalized |
+| --- | --- | --- |
+| `A*01:01+A*02:01^B*07:02+B*08:01^C*07:01+C*16:04^DQB1*02:01+DQB1*06:02^DRB1*03:01+DRB1*15:01` | 3.21e-06 | 1.000 |
+
+| Haplotype 1 | Haplotype 2 | Genotype Frequency | Normalized |
+| --- | --- | --- | --- |
+| `A*01:01~B*08:01~C*07:01~DQB1*02:01~DRB1*03:01` | `A*02:01~B*07:02~C*16:04~DQB1*06:02~DRB1*15:01` | 3.21e-06 | 1.000 |
+
+### Imputing a file
+
+Create a CSV file with one subject per line and no header, in the format `ID,GL_STRING,RACE1,RACE2`.
+For example, `subjects.csv`:
+
+```
+D1,A*01:01+A*02:01^B*08:01+B*07:02^DRB1*03:01+DRB1*15:01,CAU,CAU
+```
+
+Upload it on the home page. You get back `grimmard_results.zip`, which contains two CSV files with the
+lines `ID,RESULT,PROBABILITY,RANK`:
+
+- `genotype<N>.csv`, the imputed genotypes:
 
   ```
-  ID,GL_STRING,RACE1,RACE2
+  D1,A*01:01+A*02:01^B*07:02+B*08:01^C*07:01+C*16:04^DPA1*01:03+DPA1*01:03^DPB1*04:01+DPB1*294:01^DQA1*01:02+DQA1*05:01^DQB1*02:01+DQB1*06:02^DRB1*03:01+DRB1*15:01^DRB3*01:01+DRB5*01:01,3.210075733065604e-06,0
   ```
 
-  For example:
+- `haplotype<N>.csv`, the imputed haplotype pairs:
 
   ```
-  D1,A*01:01+A*02:01^B*08:01+B*07:02^DRB1*03:01+DRB1*15:01,CAU,CAU
+  D1,A*01:01~B*08:01~C*07:01~DPA1*01:03~DPB1*294:01~DQA1*05:01~DQB1*02:01~DRB1*03:01~DRB3*01:01+A*02:01~B*07:02~C*16:04~DPA1*01:03~DPB1*04:01~DQA1*01:02~DQB1*06:02~DRB1*15:01~DRB5*01:01,3.210075733065604e-06,0
   ```
 
-  You get back a zip file with the genotype and haplotype results.
+File results always cover all loci in the graph (9 loci for the example data).
 
-Populations must match the `populations` in the configuration file (`AFA` and `CAU` for the example data).
+> **Note:** With the default configuration, file upload only returns results for typings whose loci
+> match an entry in `Plan_A_Matrix` (the full 9 loci, or any combination of up to 3 loci). Other
+> subjects, for example a 5-locus A/B/C/DRB1/DQB1 typing, are skipped. The form does not have this
+> limitation.
 
 ---
 
